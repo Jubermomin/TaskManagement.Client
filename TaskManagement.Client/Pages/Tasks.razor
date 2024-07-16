@@ -1,0 +1,90 @@
+﻿@page "/tasks"
+@using EmployeeManagement.Shared
+@using TaskManagement.Client.Pages
+@using MudBlazor
+@inject HttpClient Http
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+<PageTitle>Tasks</PageTitle>
+
+<MudText Typo="Typo.h4">Task List</MudText>
+<MudTable T="EmployeeDto" Items="tasks" Dense="true" Hover="true" Bordered="true" Striped="true">
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Title</MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Due Date</MudTh>
+        <MudTh>Completed</MudTh>
+        <MudTh>Employee</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Title">@context.Title</MudTd>
+        <MudTd DataLabel="Description">@context.Description</MudTd>
+        <MudTd DataLabel="Due Date">@context.DueDate.ToShortDateString()</MudTd>
+        <MudTd DataLabel="Completed">@context.Completed.ToString()</MudTd>
+        <MudTd DataLabel="Employee">@context.Name</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => EditTask(context))">Edit</MudButton>
+            <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="@(() => DeleteTask(context.Id))">Delete</MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private List<EmployeeDto> tasks = new List<EmployeeDto>();
+    private TaskItemDto selectedTask;
+    private bool _visible;
+    bool showDialog = false;
+    [Parameter] public EventCallback OnSave { get; set; }
+    private readonly DialogOptions _dialogOptions = new() { FullWidth = true };
+
+    // private void OpenDialog() => _visible = true;
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTasks();
+    }
+
+    private async Task LoadTasks()
+    {
+        tasks = await Http.GetFromJsonAsync<List<EmployeeDto>>("api/Tasks");
+    }
+
+    private async Task ReloadTasks()
+    {
+        await LoadTasks();
+        // showEditDialog = false;
+        StateHasChanged();
+    }
+
+    private async void EditTask(EmployeeDto task)
+    {
+        Navigation.NavigateTo($"/taskdetails/{task.Id}");
+        // selectedTask = task;
+        // // showEditDialog = true;
+        // showDialog = true;
+        // _visible = true;
+        // var parameters = new DialogParameters<EditTaskDialog<TaskItemDto>> { { "TaskItemDto", task } };
+
+        // var dialog = await DialogService.ShowAsync<EditTaskDialog<TaskItemDto>>("Edit", parameters);
+        // var result = await dialog.Result;
+
+        // if (!result.Canceled)
+        // {
+        //     //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
+        //     Guid.TryParse(result.Data.ToString(), out Guid deletedServer);
+        //     // Servers.RemoveAll(item => item.Id == deletedServer);
+        // }
+        StateHasChanged();
+    }
+
+    private async Task DeleteTask(int id)
+    {
+        await Http.DeleteAsync($"api/Tasks/{id}");
+        await LoadTasks();
+    }
+
+
+}

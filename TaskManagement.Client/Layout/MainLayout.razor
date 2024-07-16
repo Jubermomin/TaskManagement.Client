@@ -1,0 +1,44 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="CustomTheme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    #region [Custom Theme]
+    MudTheme CustomTheme = new MudTheme()
+        {
+            PaletteLight = new PaletteLight()
+            {
+                AppbarBackground = new MudBlazor.Utilities.MudColor("#008075"),
+                Primary = new MudBlazor.Utilities.MudColor("#008075"), //20607E
+                TextSecondary = new MudBlazor.Utilities.MudColor("#008075"),
+                Secondary = new MudBlazor.Utilities.MudColor("#FAAA3C"),
+                Success = new MudBlazor.Utilities.MudColor("#008C82"),
+                Error = new MudBlazor.Utilities.MudColor("#F2595A"),
+                Warning = new MudBlazor.Utilities.MudColor("#864900"),
+                Tertiary = new MudBlazor.Utilities.MudColor("#DCCDF0"),
+                Dark = new MudBlazor.Utilities.MudColor("#b2b7b9"),
+                LinesDefault = new MudBlazor.Utilities.MudColor("#DFE2E6"),
+                TableLines = new MudBlazor.Utilities.MudColor("#DFE2E6"),
+                DrawerBackground = new MudBlazor.Utilities.MudColor("#DFE2E6"),
+                Info = new MudBlazor.Utilities.MudColor("#864900"),
+            },
+        };
+    #endregion
+}

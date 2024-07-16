@@ -1,0 +1,148 @@
+﻿@page "/taskdetails/{taskId:int}"
+@using EmployeeManagement.Shared
+@using EmployeeManagement.Shared.Models
+@using MudBlazor
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+
+<MudText Typo="Typo.h6">Edit Task</MudText>
+    <MudTextField @bind-Value="Task.Title" Label="Title" FullWidth="true" />
+    <MudTextField @bind-Value="Task.Description" Label="Description" FullWidth="true" />
+<MudDatePicker PickerVariant="PickerVariant.Dialog" @bind-value="date" Date="@(DateTime.Today.AddDays(1))" Label="Due Date" />
+     <MudCheckBox @bind-Value="ischecked" Label="Completed" />
+<MudButton OnClick="Save" Color="Color.Primary" Variant="Variant.Filled">Edit Data</MudButton>
+    <MudText Typo="Typo.h6">Notes</MudText>
+    <MudTextField @bind-Value="newNote" Label="Add Note" FullWidth="true" />
+<MudButton OnClick="AddNote" Color="Color.Primary" Variant="Variant.Filled">Add Note</MudButton>
+    @if(notes != null)
+    {
+    <MudTable T="Note" Items="notes" Dense="true" Hover="true" Bordered="true" Striped="true">
+        <HeaderContent>
+            <MudTh>Content</MudTh>
+            <MudTh>CreatedByUserId</MudTh>
+            <MudTh>CreatedDate</MudTh>
+
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Content">@context.Content</MudTd>
+            <MudTd DataLabel="CreatedByUser">@context.CreatedByUserId</MudTd>
+            <MudTd DataLabel="CreatedDate">@context.CreatedDate</MudTd>
+
+        </RowTemplate>
+    </MudTable>
+
+    }
+    <MudText Typo="Typo.h6">Documents</MudText>
+    <MudTextField @bind-Value="newDocumentFileName" Label="File Name" FullWidth="true" />
+    <MudTextField @bind-Value="newDocumentContent" Label="Content (Base64)" FullWidth="true" />
+<MudButton OnClick="AddDocument" Color="Color.Primary" Variant="Variant.Filled">Add Document</MudButton>
+@if (documents != null)
+{
+    <MudTable T="Document" Items="documents" Dense="true" Hover="true" Bordered="true" Striped="true">
+        <HeaderContent>
+            <MudTh>DocumentId</MudTh>
+            <MudTh>FilePath</MudTh>
+            <MudTh>Task</MudTh>
+
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="DocumentId">@context.DocumentId</MudTd>
+            <MudTd DataLabel="FilePath">@context.FilePath</MudTd>
+            <MudTd DataLabel="Task">@context.Task</MudTd>
+
+        </RowTemplate>
+    </MudTable>
+
+}
+
+@code{
+    [Parameter]
+    public int taskId { get; set; }
+    [Parameter] public EventCallback OnSave { get; set; }
+    EmployeeDto Task = new EmployeeDto();
+    private List<Note> notes = new List<Note>();
+    private List<Document> documents = new List<Document>();
+    private string newNote;
+    private string newDocumentFileName;
+    private string newDocumentContent;
+    DateTime date = DateTime.Now;
+    private bool ischecked = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Task = await Http.GetFromJsonAsync<EmployeeDto>($"api/Tasks/{taskId}");
+        date = Task.DueDate;
+        ischecked = Task.Completed;
+        // tasks = await Http.GetFromJsonAsync<IEnumerable<TaskItemDto>>($"/api/tasks/{taskId}/Notes");
+        var response = await Http.GetAsync($"/api/tasks/{taskId}/Notes/taskitem/{taskId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            notes = await response.Content.ReadFromJsonAsync<List<Note>>();
+        }
+
+        var dcoResponse = await Http.GetAsync($"/api/tasks/{taskId}/Documents/taskitem/{taskId}");
+
+        if (dcoResponse.IsSuccessStatusCode)
+        {
+            documents = await dcoResponse.Content.ReadFromJsonAsync<List<Document>>();
+        }
+        // documents = await DocumentService.GetDocumentsAsync(taskId);
+        // notes = await NoteService.GetNotesAsync(taskId);
+    }
+    private async Task AddNote()
+    {
+        var note = new NoteDto { Content = newNote, TaskId = Task.Id ,CreatedByUserId = 1,CreatedDate = DateTime.Now};
+        var response = await Http.PostAsJsonAsync($"api/tasks/{Task.Id}/Notes", note);
+        if (response.IsSuccessStatusCode)
+        {
+            // Task.Notes.Add(note);
+            newNote = string.Empty;
+            var newResponse = await Http.GetAsync($"/api/tasks/{taskId}/Notes/taskitem/{taskId}");
+
+            if (newResponse.IsSuccessStatusCode)
+            {
+                notes = await newResponse.Content.ReadFromJsonAsync<List<Note>>();
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task AddDocument()
+    {
+        var document = new DocumentDto { FileName = newDocumentFileName, Content = (newDocumentContent), TaskItemId = Task.Id };
+        var response = await Http.PostAsJsonAsync($"api/tasks/{taskId}/Documents", document);
+        if (response.IsSuccessStatusCode)
+        {
+            // Task.Documents.Add(document);
+            newDocumentFileName = string.Empty;
+            newDocumentContent = string.Empty;
+            var newResponse = await Http.GetAsync($"/api/tasks/{taskId}/Documents/taskitem/{taskId}");
+
+            if (newResponse.IsSuccessStatusCode)
+            {
+                documents = await newResponse.Content.ReadFromJsonAsync<List<Document>>();
+            }
+            StateHasChanged();
+        }
+    }
+    private async Task Save()
+    {
+         Task.DueDate = date;
+         Task.Completed = ischecked;
+        var response = await Http.PutAsJsonAsync($"api/Tasks/{Task.Id}", Task);
+        if (response.IsSuccessStatusCode)
+        {
+            await OnSave.InvokeAsync();
+        }
+    }
+
+    private void Cancel()
+    {
+        Task = null;
+        newNote = string.Empty;
+        newDocumentFileName = string.Empty;
+        newDocumentContent = string.Empty;
+    }
+}

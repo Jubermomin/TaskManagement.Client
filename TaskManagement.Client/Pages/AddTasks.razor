@@ -1,0 +1,32 @@
+﻿@page "/addtask"
+@using EmployeeManagement.Shared
+@using EmployeeManagement.Shared.Models
+@using TaskManagement.Client.Pages
+@using MudBlazor
+@inject HttpClient Http
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudText Typo="Typo.h4">Add Task</MudText>
+    <MudTextField Label="Title" @bind-Value="task.Title" Required="true"></MudTextField>
+    <MudTextField Label="Description" @bind-Value="task.Description" Required="true"></MudTextField>
+    <MudDatePicker Label="Due Date" @bind-value="date" Required="true" />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTask">Save</MudButton>
+</MudContainer>
+
+@code {
+    private EmployeeDto task = new EmployeeDto();
+    DateTime date = DateTime.Now;
+    private async Task SaveTask()
+    {
+        task.DueDate = date;
+        task.Name = "Test";
+        // await TaskService.CreateTaskAsync(task);
+        var response = await Http.PostAsJsonAsync($"api/tasks", task);
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/tasks");
+        }
+    }
+}

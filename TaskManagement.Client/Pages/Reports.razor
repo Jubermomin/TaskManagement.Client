@@ -1,0 +1,56 @@
+﻿@page "/reports"
+@using EmployeeManagement.Shared
+@using EmployeeManagement.Shared.Models
+@using TaskManagement.Client.Pages
+@using MudBlazor
+@inject HttpClient Http
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudText Typo="Typo.h4">Reports</MudText>
+
+    <MudText Typo="Typo.h5">Weekly Report</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GetWeeklyReport">Get Weekly Report</MudButton>
+    <MudTable Items="weeklyReport" Hover="true">
+        <HeaderContent>
+            <MudTh>Team ID</MudTh>
+            <MudTh>Tasks Due This Week</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Team ID">@context.TeamId</MudTd>
+            <MudTd DataLabel="Tasks Due This Week">@context.TasksDueThisWeek</MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    <MudDivider />
+
+    <MudText Typo="Typo.h5">Monthly Report</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GetMonthlyReport">Get Monthly Report</MudButton>
+    <MudTable Items="monthlyReport" Hover="true">
+        <HeaderContent>
+            <MudTh>Team ID</MudTh>
+            <MudTh>Tasks Due This Month</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Team ID">@context.TeamId</MudTd>
+            <MudTd DataLabel="Tasks Due This Month">@context.TasksDueThisMonth</MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private IEnumerable<dynamic> weeklyReport;
+    private IEnumerable<dynamic> monthlyReport;
+
+    private async Task GetWeeklyReport()
+    {
+        weeklyReport = await Http.GetFromJsonAsync<IEnumerable<dynamic>>("api/reports/weekly");
+    }
+
+    private async Task GetMonthlyReport()
+    {
+        monthlyReport = await Http.GetFromJsonAsync<IEnumerable<dynamic>>("api/reports/monthly");
+    }
+}
